@@ -42,7 +42,7 @@ func NewDefaultConnection() *Connection {
 }
 
 // TODO: check for memory leaks
-func updateDefaultConnection(c *Connection) {
+func updateDefaultConnection(conn *Connection) {
 	var dests *C.cups_dest_t
 	destCount := C.cupsGetDests(&dests)
 	goDestCount := int(destCount)
@@ -76,6 +76,8 @@ func updateDefaultConnection(c *Connection) {
 	// free the pointers
 	C.cupsFreeDests(destCount, dests)
 
-	c.NumDests = goDestCount
-	c.Dests = destsArr
+	conn.NumDests = goDestCount
+	conn.Dests = destsArr
 }
+
+// TODO: implement cupsEnumDests()

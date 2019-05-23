@@ -5,6 +5,14 @@ package cups
 #include "cups/cups.h"
 */
 import "C"
+import (
+	"bufio"
+	"fmt"
+	"log"
+	"os"
+	"sort"
+	"strings"
+)
 
 const printerStateIdle = "3"
 const printerStatePrinting = "4"
@@ -20,11 +28,20 @@ type Dest struct {
 
 // PrintFile prints a file
 // TODO: Complete implementation
-// func (d *Dest) PrintFile(filename, mimeType string) int {
-// 	// check mime type
-// 	// check file
-// 	return 0
-// }
+func (d *Dest) PrintFile(filename, mimeType string) int {
+	// check mime type
+	mimeTypes, err := GetMimeTypes("/usr/share/cups/mime/mime.types")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	i := sort.SearchStrings(mimeTypes, mimeType)
+	if i < len(mimeTypes) && mimeTypes[i] == mimeType {
+		fmt.Println("Valid")
+	}
+	// check file
+	return 0
+}
 
 // Status returns the status of the dest
 func (d *Dest) Status() string {
@@ -71,18 +88,51 @@ func (d *Dest) GetOptions() map[string]string {
 
 // TestPrint prints a test page
 func (d *Dest) TestPrint() int {
-
 	var numOptions C.int
 	var options *C.cups_option_t
 	var jobID C.int
 
 	// resolve path/to/test/file
-	// TODO: find the location of this file on linux/bsd/osx
-	osxTest := "/usr/share/cups/data/testprint"
-
+	// same across linux/osx; TODO: bsd
+	test := "/usr/share/cups/data/testfile"
 	// Print a single file
-	jobID = C.cupsPrintFile(C.CString(d.Name), C.CString(osxTest),
+	jobID = C.cupsPrintFile(C.CString(d.Name), C.CString(test),
 		C.CString("Test Print"), numOptions, options)
 
 	return int(jobID)
+}
+
+// TODO: Implement CancelJob
+// cupsCancelDestJob
+
+// GetMimeTypes returns a slice of strings
+func GetMimeTypes(filename string) ([]string, error) {
+	file, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	var lines []string
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+
+	var mimeTypes []string
+
+	for _, l := range lines {
+		mt := strings.Fields(l)
+		if len(mt) > 0 {
+			if !strings.Contains(mt[0], "#") && !strings.Contains(mt[0], "(") {
+				mimeTypes = append(mimeTypes, mt[0])
+			}
+		}
+	}
+
+	return mimeTypes, nil
 }
