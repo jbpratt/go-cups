@@ -6,7 +6,7 @@ int main() {
   printf("%s\n", cupsGetDefault());
 
   /* Print a single file */
-  job_id = cupsPrintFile(cupsGetDefault(), "./test.txt", "Test Print", 0, NULL);
+  job_id = cupsPrintFile(cupsGetDefault(), "../../test.txt", "Test Print", 0, NULL);
 
   if (job_id == 0) puts(cupsLastErrorString());
 

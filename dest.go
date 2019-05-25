@@ -7,6 +7,7 @@ package cups
 import "C"
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -28,7 +29,7 @@ type Dest struct {
 
 // PrintFile prints a file
 // TODO: Complete implementation
-func (d *Dest) PrintFile(filename, mimeType string) int {
+func (d *Dest) PrintFile(filename, mimeType string) (int, error) {
 	// check mime type
 	mimeTypes, err := GetMimeTypes("/usr/share/cups/mime/mime.types")
 	if err != nil {
@@ -40,7 +41,13 @@ func (d *Dest) PrintFile(filename, mimeType string) int {
 		fmt.Println("Valid")
 	}
 	// check file
-	return 0
+	id := C.cupsPrintFile(C.CString(d.Name), C.CString(filename),
+		C.CString("Test Print"), C.int(len(d.options)), nil)
+
+	if id == 0 {
+		return -1, errors.New(fmt.Sprintf("Failed to print with: %d error code", C.cupsLastError()))
+	}
+	return int(id), nil
 }
 
 // Status returns the status of the dest
