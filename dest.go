@@ -28,7 +28,6 @@ type Dest struct {
 }
 
 // PrintFile prints a file
-// TODO: Complete implementation
 func (d *Dest) PrintFile(filename, mimeType string) (int, error) {
 	// check mime type
 	mimeTypes, err := GetMimeTypes("/usr/share/cups/mime/mime.types")
@@ -36,19 +35,29 @@ func (d *Dest) PrintFile(filename, mimeType string) (int, error) {
 		log.Fatal(err)
 	}
 
+	sort.Strings(mimeTypes)
 	i := sort.SearchStrings(mimeTypes, mimeType)
 	if i < len(mimeTypes) && mimeTypes[i] == mimeType {
-		fmt.Println("Valid")
-	}
-	// check file
-	id := C.cupsPrintFile(C.CString(d.Name), C.CString(filename),
-		C.CString("Test Print"), C.int(len(d.options)), nil)
 
-	if id == 0 {
-		return -1, errors.New(fmt.Sprintf("Failed to print with: %d error code", C.cupsLastError()))
+		// TODO: check if file exists
+
+		// TODO: check status of dest printer
+
+		// print file
+		id := C.cupsPrintFile(C.CString(d.Name), C.CString(filename),
+			C.CString("Test Print"), C.int(len(d.options)), nil)
+
+		if id == 0 {
+			return 1, errors.New(
+				fmt.Sprintf("failed to print with error code: %d %s", C.cupsLastError(), C.cupsLastErrorString()))
+		}
+		return int(id), nil
 	}
-	return int(id), nil
+	return 1, errors.New("invalid mime type")
 }
+
+// TODO: PrintFiles
+// cupsPrintFiles
 
 // Status returns the status of the dest
 func (d *Dest) Status() string {
@@ -77,7 +86,6 @@ func (d *Dest) Status() string {
 	}
 
 	return returnMessage
-
 }
 
 // GetOption returns the options
@@ -93,20 +101,18 @@ func (d *Dest) GetOptions() map[string]string {
 	return d.options
 }
 
-// TestPrint prints a test page
-func (d *Dest) TestPrint() int {
-	var numOptions C.int
-	var options *C.cups_option_t
-	var jobID C.int
+// TODO: CreateJob
+// cupsCreateJob
+// cupsStartDocument
+// cupsWriteRequestData
+// cupsFinishDocument
 
-	// resolve path/to/test/file
-	// same across linux/osx; TODO: bsd
-	test := "/usr/share/cups/data/testfile"
-	// Print a single file
-	jobID = C.cupsPrintFile(C.CString(d.Name), C.CString(test),
-		C.CString("Test Print"), numOptions, options)
+// TODO: GetJobs
+// cupsGetJobs
+func (d *Dest) GetJobs() {
 
-	return int(jobID)
+	// check dest status
+	// get jobs
 }
 
 // TODO: Implement CancelJob

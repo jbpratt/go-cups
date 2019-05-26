@@ -5,6 +5,7 @@ package cups
 #include "cups/cups.h"
 */
 import "C"
+import "fmt"
 
 // Connection is a struct containing information about a CUPS connection
 type Connection struct {
@@ -13,14 +14,6 @@ type Connection struct {
 	NumDests  int
 	Dests     []*Dest
 }
-
-// Is there a better way to do this?
-// I manually calculated the size in C
-//
-const cupsDestTSize = 32
-const cupsOptionTSize = 16
-
-var enumDestsChan chan *Dest
 
 // Refresh updates the list of destinations and their state
 func (c *Connection) Refresh() {
@@ -52,13 +45,24 @@ func updateDefaultConnection(conn *Connection) {
 			Name: C.GoString(dest.name),
 		}
 
-		options := make(map[string]string)
+		/*value := C.cupsGetOption(C.CString("printer-state"), dest.num_options, dest.options)
+		fmt.Println(*value)
+		v1 := C.cupsGetOption(C.CString("printer-state-reasons"), dest.num_options, dest.options)
+		fmt.Println(*v1)
+
+		info := C.cupsGetOption(C.CString("printer-info"), dest.num_options, dest.options)
+		fmt.Println(*info)*/
+
+		mm := C.cupsGetOption(C.CString("printer-make-and-model"), dest.num_options, dest.options)
+		fmt.Println(*mm)
+
+		/*options := make(map[string]string)
 		for j := 0; j < int(dest.num_options)-1; j++ {
 			var opt *C.cups_option_t
 			opt = dest.options
 			options[C.GoString(opt.name)] = C.GoString(opt.value)
 		}
-		d.options = options
+		d.options = options*/
 
 		destsArr = append(destsArr, d)
 	}
