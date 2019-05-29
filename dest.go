@@ -89,11 +89,13 @@ func (d *Dest) Status() string {
 }
 
 // GetOption returns the options
-// TODO: Complete implementation
-// func (d *Dest) GetOption(keyName string) string {
-// 	// Return option
-// 	return ""
-// }
+func (d *Dest) GetOption(keyName string) (string, error) {
+	options := d.GetOptions()
+	if v, found := options[keyName]; found {
+		return v, nil
+	}
+	return "", errors.New("option not found")
+}
 
 // GetOptions returns a map of the dest options
 func (d *Dest) GetOptions() map[string]string {

@@ -5,7 +5,6 @@ package cups
 #include "cups/cups.h"
 */
 import "C"
-import "fmt"
 
 // Connection is a struct containing information about a CUPS connection
 type Connection struct {
@@ -45,24 +44,26 @@ func updateDefaultConnection(conn *Connection) {
 			Name: C.GoString(dest.name),
 		}
 
-		/*value := C.cupsGetOption(C.CString("printer-state"), dest.num_options, dest.options)
-		fmt.Println(*value)
-		v1 := C.cupsGetOption(C.CString("printer-state-reasons"), dest.num_options, dest.options)
-		fmt.Println(*v1)
-
-		info := C.cupsGetOption(C.CString("printer-info"), dest.num_options, dest.options)
-		fmt.Println(*info)*/
-
-		mm := C.cupsGetOption(C.CString("printer-make-and-model"), dest.num_options, dest.options)
-		fmt.Println(*mm)
-
-		/*options := make(map[string]string)
-		for j := 0; j < int(dest.num_options)-1; j++ {
-			var opt *C.cups_option_t
-			opt = dest.options
-			options[C.GoString(opt.name)] = C.GoString(opt.value)
+		options := []string{
+			"auth-info-required",
+			"printer-info",
+			"printer-is-accepting-jobs",
+			"printer-is-shared",
+			"printer-location",
+			"printer-make-and-model",
+			"printer-state",
+			"printer-state-change-time",
+			"printer-state-reasons",
+			"printer-type",
 		}
-		d.options = options*/
+		res := make(map[string]string, len(options))
+
+		for _, option := range options {
+			o := C.cupsGetOption(C.CString(option), dest.num_options, dest.options)
+			res[option] = C.GoString(o)
+		}
+
+		d.options = res
 
 		destsArr = append(destsArr, d)
 	}
