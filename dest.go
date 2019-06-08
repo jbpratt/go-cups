@@ -55,7 +55,8 @@ func (d *Dest) PrintFile(filename, mimeType string) (int, error) {
 
 		if id == 0 {
 			return 1, errors.New(
-				fmt.Sprintf("failed to print with error code: %d %s", C.cupsLastError(), C.cupsLastErrorString()))
+				fmt.Sprintf("failed to print with error code: %d %s",
+					C.cupsLastError(), C.GoString(C.cupsLastErrorString())))
 		}
 		return int(id), nil
 	}
@@ -68,31 +69,31 @@ func (d *Dest) PrintFile(filename, mimeType string) (int, error) {
 // Status returns the status of the dest
 // TODO: return string, error
 func (d *Dest) Status() string {
-	var returnMessage string
+	var status string
 
 	// Return status of dest
 	value, ok := d.options["printer-state"]
 
 	if ok != true {
-		returnMessage = "printer state key does not exist"
+		status = "printer state key does not exist"
 	}
 
 	switch value {
 	case printerStateIdle:
-		returnMessage = "idle"
+		status = "idle"
 		break
 	case printerStatePrinting:
-		returnMessage = "printing"
+		status = "printing"
 		break
 	case printerStateStopped:
-		returnMessage = "stopped"
+		status = "stopped"
 		break
 	default:
-		returnMessage = "error"
+		status = "error"
 		break
 	}
 
-	return returnMessage
+	return status
 }
 
 // GetOption returns the options
@@ -124,8 +125,22 @@ func (d *Dest) GetJobs() {
 	// get jobs
 }
 
-// TODO: Implement CancelJob
-// cupsCancelDestJob
+// CancelJob takes in a jobID and cancels the job with
+// that ID. TODO: implement CUPS_JOBID_CURRENT & CUPS_JOBID_ALL
+func (d *Dest) CancelJob(jobID int) error {
+	if jobID == 0 {
+		return errors.New("supply job ID TODO: implement CUPS_JOBID_CURRENT")
+	}
+
+	id := C.cupsCancelJob(C.CString(d.Name), C.int(jobID))
+
+	if id == 0 {
+		return errors.New(
+			fmt.Sprintf("failed to cancel job with error code: %d %v",
+				C.cupsLastError(), C.GoString(C.cupsLastErrorString())))
+	}
+	return nil
+}
 
 // GetMimeTypes returns a slice of strings
 func GetMimeTypes(filename string) ([]string, error) {
