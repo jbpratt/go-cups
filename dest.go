@@ -28,6 +28,9 @@ type Dest struct {
 }
 
 // PrintFile prints a file
+// TODO: should we swap from taking in mimetype and instead
+//	detecting content type through http.DetectContentType
+// leak
 func (d *Dest) PrintFile(filename, mimeType string) (int, error) {
 	// check mime type
 	mimeTypes, err := GetMimeTypes("/usr/share/cups/mime/mime.types")
@@ -41,7 +44,10 @@ func (d *Dest) PrintFile(filename, mimeType string) (int, error) {
 
 		// TODO: check if file exists
 
-		// TODO: check status of dest printer
+		status := d.Status()
+		if status != "idle" {
+			log.Fatal("printer is not idle")
+		}
 
 		// print file
 		id := C.cupsPrintFile(C.CString(d.Name), C.CString(filename),
@@ -60,6 +66,7 @@ func (d *Dest) PrintFile(filename, mimeType string) (int, error) {
 // cupsPrintFiles
 
 // Status returns the status of the dest
+// TODO: return string, error
 func (d *Dest) Status() string {
 	var returnMessage string
 
